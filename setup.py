@@ -13,7 +13,7 @@ setup(
     packages=['kandoman'],
     include_package_data=True,
     install_requires=[
-        'PySide2>=5.13.0,<6',
+        'PyQt5',
         'todoman'
     ],
     entry_points={
