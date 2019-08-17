@@ -28,7 +28,7 @@ class TodoMan():
         self.db.save(todo)
 
 
-    def done(self, todo):
+    def todo(self, todo):
         todo.completed_at = None
         todo.percent_complete = 0
         self._set_status(todo, 'NEEDS-ACTION')
@@ -37,7 +37,7 @@ class TodoMan():
         todo.completed_at = None
         self._set_status(todo, 'IN-PROCESS')
 
-    def todo(self, todo):
+    def done(self, todo):
         todo.complete()
         self.db.save(todo)
 

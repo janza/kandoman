@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 import signal
 import re
@@ -184,6 +186,8 @@ QScrollBar::sub-line:vertical {
 
 
 class MyWidget(QWidget):
+    todoman: TodoMan
+
     def __init__(self):
         QWidget.__init__(self)
         layout = QHBoxLayout()
