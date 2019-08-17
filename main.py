@@ -1,5 +1,6 @@
 import sys
-import random
+import signal
+import re
 from PySide2.QtWidgets import (
     QApplication, QLabel,
     QVBoxLayout, QWidget,
@@ -7,7 +8,7 @@ from PySide2.QtWidgets import (
 from PySide2.QtGui import QDrag
 from PySide2.QtCore import Slot, Qt, QMimeData
 
-from db import get_todos
+from db import TodoMan
 
 class BoldLabel(QLabel):
     def __init__(self, text):
@@ -23,22 +24,25 @@ class Filler(QLabel, QFrame):
 
 
 class DropZoneLabel(QLabel, QFrame):
-    def __init__(self, text):
+    def __init__(self, todo):
+        text = re.sub(r'^\[.*\] ?', '', todo.summary)
         super().__init__(text)
+        self.todo = todo
         self.setFrameStyle(QFrame.Box)
         self.setObjectName('label')
         self.setStyleSheet('#label { background: #fff; border: 2px solid #ddd; }')
+
         self.text = text
         self.setAcceptDrops(True)
         self.setWordWrap(True)
 
-    def mouseMoveEvent(self, e):
-        mimeData = QMimeData()
-        mimeData.setText(self.text)
+    def mouseMoveEvent(self, event):
+        mime_data = QMimeData()
+        mime_data.setText(self.text)
 
         drag = QDrag(self)
-        drag.setMimeData(mimeData)
-        drag.setHotSpot(e.pos() - self.rect().topLeft())
+        drag.setMimeData(mime_data)
+        drag.setHotSpot(event.pos() - self.rect().topLeft())
         drag.exec_()
 
     def dragEnterEvent(self, event):
@@ -63,7 +67,7 @@ class DropZoneLabel(QLabel, QFrame):
 
 
 class Column(QFrame):
-    def __init__(self, text):
+    def __init__(self, todoman, text):
         QFrame.__init__(self)
         layout = QVBoxLayout()
 
@@ -73,6 +77,7 @@ class Column(QFrame):
         outsize_layout.addStretch()
 
         self.layout = layout
+        self.todoman = todoman
 
         self.setLayout(outsize_layout)
         self.setObjectName('frame')
@@ -83,38 +88,67 @@ class Column(QFrame):
 
     def dragMoveEvent(self, event):
         pos = event.pos()
-        s = event.source()
-        s.move(10, pos.y() - s.rect().center().y())
+        source = event.source()
+        source.move(10, pos.y() - source.rect().center().y())
         event.accept()
 
     def dragEnterEvent(self, event):
-        s = event.source()
+        source = event.source()
         event.accept()
-        self.add(s)
-        self.layout.removeWidget(s)
+        self.add(source)
+        self.layout.removeWidget(source)
 
     def dropEvent(self, event):
-        self.add(event.source())
+        source = event.source()
+        self.add(source)
         event.setDropAction(Qt.MoveAction)
         event.accept()
+        self.drop(source.todo)
+
+    def drop(self, todo):
+        raise Exception('Not implemented')
 
 
-class MyWidget(QWidget):
-    def __init__(self):
-        QWidget.__init__(self)
-        l = QHBoxLayout()
-        columns = [
-            Column('To Do'),
-            Column('In Progress'),
-            Column('Done')
-        ]
-        for idx, c in enumerate(columns):
-            sa = QScrollArea()
-            sa.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-            sa.setWidget(c)
-            sa.setWidgetResizable(True)
-            sa.setObjectName('scrollbox')
-            sa.setStyleSheet('''
+class TodoColumn(Column):
+    def __init__(self, todoman):
+        Column.__init__(self, todoman, 'To Do')
+
+    def drop(self, todo):
+        self.todoman.todo(todo)
+
+
+class InProgressColumn(Column):
+    def __init__(self, todoman):
+        Column.__init__(self, todoman, 'In Progress')
+
+    def drop(self, todo):
+        self.todoman.in_progress(todo)
+
+
+class DoneColumn(Column):
+    def __init__(self, todoman):
+        Column.__init__(self, todoman, 'Done')
+
+    def drop(self, todo):
+        self.todoman.done(todo)
+
+
+class CancelColumn(Column):
+    def __init__(self, todoman):
+        Column.__init__(self, todoman, 'Canceled')
+
+    def drop(self, todo):
+        self.todoman.cancel(todo)
+
+
+class ScrollBar(QScrollArea):
+    def __init__(self, containing):
+        QScrollArea.__init__(self)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.setWidget(containing)
+        self.setWidgetResizable(True)
+        self.setObjectName('scrollbox')
+        self.setStyleSheet('''
 #scrollbox {
     border: none;
 }
@@ -147,24 +181,48 @@ QScrollBar::sub-line:vertical {
     subcontrol-origin: margin;
 }
                              ''')
-            l.addWidget(sa)
-            l.setStretch(idx, 1)
 
-        for todo in get_todos():
-            if todo.is_completed:
-                columns[2].add(DropZoneLabel(todo.summary))
+
+class MyWidget(QWidget):
+    def __init__(self):
+        QWidget.__init__(self)
+        layout = QHBoxLayout()
+        todoman = TodoMan()
+        columns = [
+            TodoColumn(todoman,),
+            InProgressColumn(todoman),
+            DoneColumn(todoman),
+            CancelColumn(todoman)
+        ]
+        for idx, column in enumerate(columns):
+            layout.addWidget(ScrollBar(column))
+            layout.setStretch(idx, 1)
+
+        for todo in todoman.get_todos():
+            if todo.status == 'CANCELLED':
+                columns[3].add(DropZoneLabel(todo))
+            elif todo.is_completed:
+                columns[2].add(DropZoneLabel(todo))
             elif todo.status == 'IN-PROCESS':
-                columns[1].add(DropZoneLabel(todo.summary))
+                columns[1].add(DropZoneLabel(todo))
             else:
-                columns[0].add(DropZoneLabel(todo.summary))
+                columns[0].add(DropZoneLabel(todo))
 
 
-        self.setLayout(l)
+        self.setLayout(layout)
 
-if __name__ == "__main__":
+
+
+def main():
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
     app = QApplication(sys.argv)
 
     widget = MyWidget()
     widget.show()
 
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()
