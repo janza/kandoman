@@ -9,7 +9,7 @@ setup(
     author='Josip Janzic',
     author_email='me@josip.dev',
     url='https://github.com/janza/kandoman',
-    license='ISC',
+    license='MIT',
     packages=['kandoman'],
     include_package_data=True,
     install_requires=[
