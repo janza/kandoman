@@ -3,7 +3,7 @@ import sys
 import signal
 
 from PySide2.QtWidgets import QApplication
-from board import Board
+from kandoman.board import Board
 
 
 def kandoman():

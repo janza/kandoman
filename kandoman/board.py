@@ -6,7 +6,7 @@ from PySide2.QtWidgets import (
 from PySide2.QtGui import QDrag
 from PySide2.QtCore import Qt, QMimeData
 
-from storage import TodoStore
+from kandoman.storage import TodoStore
 
 
 class BoldLabel(QLabel):
