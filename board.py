@@ -1,28 +1,17 @@
-#!/usr/bin/env python3
-
-import sys
-import signal
 import re
 from PySide2.QtWidgets import (
-    QApplication, QLabel,
-    QVBoxLayout, QWidget,
-    QFrame, QHBoxLayout, QScrollArea)
+    QLabel, QVBoxLayout, QWidget,
+    QFrame, QHBoxLayout, QScrollArea
+)
 from PySide2.QtGui import QDrag
-from PySide2.QtCore import Slot, Qt, QMimeData
+from PySide2.QtCore import Qt, QMimeData
 
-from db import TodoMan
+from storage import TodoStore
+
 
 class BoldLabel(QLabel):
     def __init__(self, text):
         super().__init__('<b>' + text + '</b>')
-
-
-class Filler(QLabel, QFrame):
-    def __init__(self):
-        super().__init__('---')
-        self.setFrameStyle(QFrame.Box)
-        self.setObjectName('label')
-        self.setStyleSheet('#label { background: transparent; border: 2px dashed #ddd; }')
 
 
 class DropZoneLabel(QLabel, QFrame):
@@ -69,7 +58,7 @@ class DropZoneLabel(QLabel, QFrame):
 
 
 class Column(QFrame):
-    def __init__(self, todoman, text):
+    def __init__(self, todostore, text):
         QFrame.__init__(self)
         layout = QVBoxLayout()
 
@@ -79,7 +68,7 @@ class Column(QFrame):
         outsize_layout.addStretch()
 
         self.layout = layout
-        self.todoman = todoman
+        self.todostore = todostore
 
         self.setLayout(outsize_layout)
         self.setObjectName('frame')
@@ -112,35 +101,35 @@ class Column(QFrame):
 
 
 class TodoColumn(Column):
-    def __init__(self, todoman):
-        Column.__init__(self, todoman, 'To Do')
+    def __init__(self, todostore):
+        Column.__init__(self, todostore, 'To Do')
 
     def drop(self, todo):
-        self.todoman.todo(todo)
+        self.todostore.todo(todo)
 
 
 class InProgressColumn(Column):
-    def __init__(self, todoman):
-        Column.__init__(self, todoman, 'In Progress')
+    def __init__(self, todostore):
+        Column.__init__(self, todostore, 'In Progress')
 
     def drop(self, todo):
-        self.todoman.in_progress(todo)
+        self.todostore.in_progress(todo)
 
 
 class DoneColumn(Column):
-    def __init__(self, todoman):
-        Column.__init__(self, todoman, 'Done')
+    def __init__(self, todostore):
+        Column.__init__(self, todostore, 'Done')
 
     def drop(self, todo):
-        self.todoman.done(todo)
+        self.todostore.done(todo)
 
 
 class CancelColumn(Column):
-    def __init__(self, todoman):
-        Column.__init__(self, todoman, 'Canceled')
+    def __init__(self, todostore):
+        Column.__init__(self, todostore, 'Canceled')
 
     def drop(self, todo):
-        self.todoman.cancel(todo)
+        self.todostore.cancel(todo)
 
 
 class ScrollBar(QScrollArea):
@@ -185,24 +174,24 @@ QScrollBar::sub-line:vertical {
                              ''')
 
 
-class MyWidget(QWidget):
-    todoman: TodoMan
+class Board(QWidget):
+    todostore: TodoStore
 
     def __init__(self):
         QWidget.__init__(self)
         layout = QHBoxLayout()
-        todoman = TodoMan()
+        todostore = TodoStore()
         columns = [
-            TodoColumn(todoman,),
-            InProgressColumn(todoman),
-            DoneColumn(todoman),
-            CancelColumn(todoman)
+            TodoColumn(todostore),
+            InProgressColumn(todostore),
+            DoneColumn(todostore),
+            CancelColumn(todostore)
         ]
         for idx, column in enumerate(columns):
             layout.addWidget(ScrollBar(column))
             layout.setStretch(idx, 1)
 
-        for todo in todoman.get_todos():
+        for todo in todostore.get_todos():
             if todo.status == 'CANCELLED':
                 columns[3].add(DropZoneLabel(todo))
             elif todo.is_completed:
@@ -212,21 +201,4 @@ class MyWidget(QWidget):
             else:
                 columns[0].add(DropZoneLabel(todo))
 
-
         self.setLayout(layout)
-
-
-
-def main():
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-    app = QApplication(sys.argv)
-
-    widget = MyWidget()
-    widget.show()
-
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    main()

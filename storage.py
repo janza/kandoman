@@ -6,7 +6,7 @@ from todoman.interactive import TodoEditor
 from todoman.model import cached_property, Database, Todo
 
 
-class TodoMan():
+class TodoStore():
     def __init__(self):
         config = load_config()
         paths = [
