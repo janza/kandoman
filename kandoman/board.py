@@ -12,6 +12,8 @@ from kandoman.storage import TodoStore
 class BoldLabel(QLabel):
     def __init__(self, text):
         super().__init__('<b>' + text + '</b>')
+        self.setObjectName('boldlabel')
+        self.setStyleSheet('#boldlabel { color: #000; }')
 
 
 class DropZoneLabel(QLabel, QFrame):
@@ -21,7 +23,7 @@ class DropZoneLabel(QLabel, QFrame):
         self.todo = todo
         self.setFrameStyle(QFrame.Box)
         self.setObjectName('label')
-        self.setStyleSheet('#label { background: #fff; border: 2px solid #ddd; }')
+        self.setStyleSheet('#label { color: #333; padding: 8px; background: #fff; border: 1px solid #ccc; } #label:hover { background: #eef; }')
 
         self.text = text
         self.setAcceptDrops(True)
@@ -46,7 +48,6 @@ class DropZoneLabel(QLabel, QFrame):
         event.ignore()
 
     def dropEvent(self, event):
-        self.setStyleSheet('#label { border: 2px solid #ddd; }')
         if event.source() == self:
             return
 
@@ -61,6 +62,10 @@ class Column(QFrame):
     def __init__(self, todostore, text):
         QFrame.__init__(self)
         layout = QVBoxLayout()
+        # self.setFrameStyle(QFrame.Box)
+        self.setObjectName('column')
+        self.setStyleSheet('#column { background: transparent; }')
+
 
         outsize_layout = QVBoxLayout()
         outsize_layout.addWidget(BoldLabel(text))
@@ -141,7 +146,8 @@ class ScrollBar(QScrollArea):
         self.setObjectName('scrollbox')
         self.setStyleSheet('''
 #scrollbox {
-    border: none;
+    border: 1px solid #ddd;
+    background: #f5f5f5;
 }
 
 QScrollBar:vertical {
@@ -179,6 +185,13 @@ class Board(QWidget):
 
     def __init__(self):
         QWidget.__init__(self)
+        self.setObjectName('board')
+        self.setStyleSheet('''
+#board {
+background: #fff;
+color: #333;
+}
+        ''')
         layout = QHBoxLayout()
         todostore = TodoStore()
         columns = [
