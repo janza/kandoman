@@ -1,3 +1,3 @@
 # kandoman
 
-UI for todoman in form of kanban board.
+UI for [todoman](https://github.com/pimutils/todoman) in form of kanban board.
