@@ -64,7 +64,7 @@ class Column(QFrame):
         layout = QVBoxLayout()
         # self.setFrameStyle(QFrame.Box)
         self.setObjectName('column')
-        self.setStyleSheet('#column { background: transparent; }')
+        self.setStyleSheet('#column { background: #f0f0f0; }')
 
 
         outsize_layout = QVBoxLayout()
@@ -76,7 +76,6 @@ class Column(QFrame):
         self.todostore = todostore
 
         self.setLayout(outsize_layout)
-        self.setObjectName('frame')
         self.setAcceptDrops(True)
 
     def add(self, widget):
