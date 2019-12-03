@@ -2,7 +2,7 @@
 import sys
 import signal
 
-from PySide2.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication
 from kandoman.board import Board
 
 

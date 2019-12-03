@@ -1,10 +1,10 @@
 import re
-from PySide2.QtWidgets import (
+from PyQt5.QtWidgets import (
     QLabel, QVBoxLayout, QWidget,
     QFrame, QHBoxLayout, QScrollArea
 )
-from PySide2.QtGui import QDrag
-from PySide2.QtCore import Qt, QMimeData
+from PyQt5.QtGui import QDrag
+from PyQt5.QtCore import Qt, QMimeData
 
 from kandoman.storage import TodoStore
 
@@ -65,7 +65,6 @@ class Column(QFrame):
         # self.setFrameStyle(QFrame.Box)
         self.setObjectName('column')
         self.setStyleSheet('#column { background: #f0f0f0; }')
-
 
         outsize_layout = QVBoxLayout()
         outsize_layout.addWidget(BoldLabel(text))
